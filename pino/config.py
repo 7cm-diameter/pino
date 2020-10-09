@@ -7,6 +7,7 @@ Settings = Dict[str, Any]
 Comport = Settings
 Experimental = Settings
 Metadata = Settings
+PinMode = Dict[int, str]
 
 
 class Config(dict):
@@ -31,3 +32,7 @@ class Config(dict):
     @property
     def metadata(self) -> Metadata:
         return self["Metadata"]
+
+    @property
+    def pinmode(self) -> PinMode:
+        return self["PinMode"]
