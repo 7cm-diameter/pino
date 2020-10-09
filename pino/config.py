@@ -20,11 +20,14 @@ class Config(dict):
     def __missing__(self) -> Settings:
         return dict()
 
-    def get_comport(self) -> Comport:
+    @property
+    def comport(self) -> Comport:
         return self["Comport"]
 
-    def get_experimental(self) -> Experimental:
+    @property
+    def experimental(self) -> Experimental:
         return self["Experimental"]
 
-    def get_metadata(self) -> Metadata:
+    @property
+    def metadata(self) -> Metadata:
         return self["Metadata"]
