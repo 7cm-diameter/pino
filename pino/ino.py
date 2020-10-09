@@ -3,7 +3,7 @@ import sys
 from enum import Enum
 from subprocess import check_output
 from time import sleep
-from typing import Optional
+from typing import Iterable, Optional
 
 from serial import Serial, SerialException  # type: ignore
 
@@ -210,6 +210,10 @@ class Arduino(object):
         proto = state.value + as_bytes(pin)
         self.__conn.write(proto)
 
+    def multiple_digital_write(self, pins: Iterable[int],
+                               states: Iterable[PinState]) -> None:
+        [self.digital_write(pin, state) for pin, state in zip(pins, states)]
+
     def digital_read(self,
                      pin: int,
                      size: int = 0,
@@ -221,6 +225,10 @@ class Arduino(object):
     def analog_write(self, pin: int, v: int) -> None:
         proto = b'\x12' + as_bytes(pin) + as_bytes(v)
         self.__conn.write(proto)
+
+    def multiple_analog_write(self, pins: Iterable[int],
+                              vs: Iterable[int]) -> None:
+        [self.analog_write(pin, v) for pin, v in zip(pins, vs)]
 
     def analog_read(self,
                     pin: int,
@@ -255,3 +263,7 @@ class Arduino(object):
     def servo_rotate(self, pin: int, angle: int) -> None:
         proto = b'\x13' + as_bytes(pin) + as_bytes(angle)
         self.__conn.write(proto)
+
+    def mulitiple_servo_rotate(self, pins: Iterable[int],
+                               angles: Iterable[int]) -> None:
+        [self.servo_rotate(pin, angle) for pin, angle in zip(pins, angles)]
