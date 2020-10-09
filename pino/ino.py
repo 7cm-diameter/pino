@@ -7,6 +7,7 @@ from typing import Optional
 
 from serial import Serial, SerialException  # type: ignore
 
+from pino.config import PinMode as _PinMode
 from pino.config import Settings
 
 
@@ -164,6 +165,7 @@ INPUT_PULLUP = PinMode.INPUT_PULLUP
 OUTPUT = PinMode.OUTPUT
 SSINPUT = PinMode.SSINPUT
 SSINPUT_PULLUP = PinMode.SSINPUT_PULLUP
+SERVO = PinMode.SERVO
 
 
 class PinState(Enum):
@@ -182,6 +184,27 @@ class Arduino(object):
     def set_pinmode(self, pin: int, mode: PinMode) -> None:
         proto = mode.value + as_bytes(pin)
         self.__conn.write(proto)
+
+    def apply_pinmode_settings(self, settings: _PinMode) -> None:
+        for pin in settings:
+            mode_str = settings[pin]
+            if mode_str == "INPUT":
+                mode = INPUT
+            elif mode_str == "INPUT_PULLUP":
+                mode = INPUT_PULLUP
+            if mode_str == "SSINPUT":
+                mode = SSINPUT
+            elif mode_str == "SSINPUT_PULLUP":
+                mode = SSINPUT_PULLUP
+            elif mode_str == "OUTPUT":
+                mode = OUTPUT
+            elif mode_str == "SERVO":
+                mode = SERVO
+            else:
+                raise NotImplementedError(
+                    f"{mode_str} cannot be used as pin mode.")
+
+            self.set_pinmode(pin, mode)
 
     def digital_write(self, pin: int, state: PinState) -> None:
         proto = state.value + as_bytes(pin)
