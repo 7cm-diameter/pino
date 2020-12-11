@@ -146,6 +146,16 @@ class Comport(object):
     def timeout(self) -> Optional[float]:
         return self.__timeout
 
+    @staticmethod
+    def available_ports() -> None:
+        from serial.tools.list_ports import comports
+        devs = comports()
+        if len(devs) == 0:
+            print("No device is connected.")
+            return None
+        for dev in devs:
+            print(dev.device)
+
 
 def as_bytes(x: int) -> bytes:
     return x.to_bytes(1, "little")
