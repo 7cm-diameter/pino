@@ -168,6 +168,7 @@ class PinMode(Enum):
     SERVO = b'\x03'
     SSINPUT = b'\x04'
     SSINPUT_PULLUP = b'\x05'
+    PULSE = b'\x06'
 
 
 INPUT = PinMode.INPUT
@@ -181,6 +182,8 @@ SERVO = PinMode.SERVO
 class PinState(Enum):
     LOW = b'\x10'
     HIGH = b'\x11'
+    PULSE_ON = b'\x14'
+    PULSE_OFF = b'\x15'
 
 
 LOW = PinState.LOW
@@ -193,6 +196,11 @@ class Arduino(object):
 
     def set_pinmode(self, pin: int, mode: PinMode) -> None:
         proto = mode.value + as_bytes(pin)
+        self.__conn.write(proto)
+
+    def set_pulse_pin(self, pin: int, freq: int, on_duration: int) -> None:
+        proto = PinMode.PULSE.value \
+            + as_bytes(pin) + as_bytes(freq) + as_bytes(on_duration)
         self.__conn.write(proto)
 
     def apply_pinmode_settings(self, settings: _PinMode) -> None:
@@ -223,6 +231,16 @@ class Arduino(object):
     def multiple_digital_write(self, pins: Iterable[int],
                                states: Iterable[PinState]) -> None:
         [self.digital_write(pin, state) for pin, state in zip(pins, states)]
+
+    # `pulse_on` blocks other arduino functions
+    # python's processes are not blocked
+    def pulse_on(self, pin: int, freq: int) -> None:
+        proto = PinState.PULSE_ON.value + as_bytes(pin) + as_bytes(freq)
+        self.__conn.write(proto)
+
+    def pulse_off(self, pin: int) -> None:
+        proto = PinState.PULSE_OFF.value + as_bytes(pin)
+        self.__conn.write(proto)
 
     def digital_read(self,
                      pin: int,
