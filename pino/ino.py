@@ -3,7 +3,7 @@ import sys
 from enum import Enum
 from subprocess import check_output
 from time import sleep
-from typing import Iterable, Optional
+from typing import Iterable, List, Optional
 
 from serial import Serial, SerialException  # type: ignore
 
@@ -198,11 +198,6 @@ class Arduino(object):
         proto = mode.value + as_bytes(pin)
         self.__conn.write(proto)
 
-    def set_pulse_pin(self, pin: int, freq: int, on_duration: int) -> None:
-        proto = PinMode.PULSE.value \
-            + as_bytes(pin) + as_bytes(freq) + as_bytes(on_duration)
-        self.__conn.write(proto)
-
     def apply_pinmode_settings(self, settings: _PinMode) -> None:
         for pin in settings:
             mode_str = settings[pin]
@@ -231,16 +226,6 @@ class Arduino(object):
     def multiple_digital_write(self, pins: Iterable[int],
                                states: Iterable[PinState]) -> None:
         [self.digital_write(pin, state) for pin, state in zip(pins, states)]
-
-    # `pulse_on` blocks other arduino functions
-    # python's processes are not blocked
-    def pulse_on(self, pin: int, freq: int) -> None:
-        proto = PinState.PULSE_ON.value + as_bytes(pin) + as_bytes(freq)
-        self.__conn.write(proto)
-
-    def pulse_off(self, pin: int) -> None:
-        proto = PinState.PULSE_OFF.value + as_bytes(pin)
-        self.__conn.write(proto)
 
     def digital_read(self,
                      pin: int,
@@ -295,3 +280,53 @@ class Arduino(object):
     def mulitiple_servo_rotate(self, pins: Iterable[int],
                                angles: Iterable[int]) -> None:
         [self.servo_rotate(pin, angle) for pin, angle in zip(pins, angles)]
+
+
+class PulseMode(Arduino):
+    maxidx = 10
+
+    def __init__(self, comport: Comport):
+        super().__init__(comport)
+        self.__idx = 0
+        self.__frequency: List[int] = []
+        self.__duration: List[int] = []
+        self.__pulsing = False
+
+    @property
+    def current_idx(self) -> int:
+        return self.__idx
+
+    @property
+    def print_pulse_params(self):
+        for (i, (freq,
+                 dur)) in enumerate(zip(self.__frequency, self.__duration)):
+            print(f"{i}: Frequency - {freq}  Duration - {dur}")
+
+    @property
+    def pulsing(self) -> bool:
+        return self.__pulsing
+
+    def set_pulse_params(self, freq: int, duration: int) -> None:
+        if self.__idx >= self.maxidx:
+            IndexError(f"idx must be lower than {self.maxidx}")
+        proto = PinMode.PULSE.value \
+            + as_bytes(self.current_idx) + as_bytes(freq) + as_bytes(duration)
+        self.__conn.write(proto)
+        self.__frequency.append(freq)
+        self.__duration.append(duration)
+        self.__idx += 1
+
+    # `pulse_on` blocks other arduino functions until `pulse_off` is called
+    # python's processes are not blocked
+    def pulse_on(self, pin: int, idx: int) -> None:
+        if self.pulsing:
+            return None
+        proto = PinState.PULSE_ON.value + as_bytes(pin) + as_bytes(idx)
+        self.__conn.write(proto)
+        self.__pulsing = True
+
+    def pulse_off(self) -> None:
+        if not self.pulsing:
+            return None
+        proto = PinState.PULSE_OFF.value
+        self.__conn.write(proto)
