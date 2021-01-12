@@ -1,4 +1,5 @@
 import argparse as ap
+from typing import List
 
 from pino.config import Config
 
@@ -10,6 +11,10 @@ class PinoCli(object):
                                    "-y",
                                    help="About this argument",
                                    type=str)
+        self.__parser.add_argument("--yamls",
+                                   "-Y",
+                                   help="About this argument",
+                                   type=List[str])
         self.__parser.add_argument("--port",
                                    "-p",
                                    help="About this argument",
