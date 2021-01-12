@@ -21,6 +21,3 @@ if __name__ == '__main__':
         sleep(1)
         ino.digital_write(LED_BUILTIN, LOW)
         sleep(1)
-
-    ino.disconnect()
-    com.disconnect()
