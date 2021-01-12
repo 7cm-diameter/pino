@@ -3,7 +3,7 @@ import sys
 from enum import Enum
 from subprocess import check_output
 from time import sleep
-from typing import Iterable, Optional
+from typing import Iterable, List, Optional
 
 from serial import Serial, SerialException  # type: ignore
 
@@ -168,6 +168,7 @@ class PinMode(Enum):
     SERVO = b'\x03'
     SSINPUT = b'\x04'
     SSINPUT_PULLUP = b'\x05'
+    PULSE = b'\x06'
 
 
 INPUT = PinMode.INPUT
@@ -181,6 +182,8 @@ SERVO = PinMode.SERVO
 class PinState(Enum):
     LOW = b'\x10'
     HIGH = b'\x11'
+    PULSE_ON = b'\x14'
+    PULSE_OFF = b'\x15'
 
 
 LOW = PinState.LOW
@@ -277,3 +280,52 @@ class Arduino(object):
     def mulitiple_servo_rotate(self, pins: Iterable[int],
                                angles: Iterable[int]) -> None:
         [self.servo_rotate(pin, angle) for pin, angle in zip(pins, angles)]
+
+
+class Optuino(Arduino):
+    maxidx = 50
+
+    def __init__(self, comport: Comport):
+        super().__init__(comport)
+        self.__conn = comport.connection
+        self.__frequency: List[int] = []
+        self.__duration: List[int] = []
+        self.__pulsing = False
+
+    @property
+    def pulse_settings(self) -> List[str]:
+        return [
+            f"{i}: Frequency - {freq}  Duration - {dur}"
+            for (i, (freq,
+                     dur)) in enumerate(zip(self.__frequency, self.__duration))
+        ]
+
+    @property
+    def pulsing(self) -> bool:
+        return self.__pulsing
+
+    def set_pulse_params(self, setting_idx: int, freq: int,
+                         duration: int) -> None:
+        if setting_idx >= self.maxidx:
+            IndexError(f"idx must be lower than {self.maxidx}")
+        proto = PinMode.PULSE.value \
+            + as_bytes(setting_idx) + as_bytes(freq) + as_bytes(duration)
+        self.__conn.write(proto)
+        self.__frequency.append(freq)
+        self.__duration.append(duration)
+
+    # `pulse_on` blocks other arduino functions until `pulse_off` is called
+    # python's processes are not blocked
+    def pulse_on(self, pin: int, idx: int) -> None:
+        if self.pulsing:
+            return None
+        proto = PinState.PULSE_ON.value + as_bytes(pin) + as_bytes(idx)
+        self.__conn.write(proto)
+        self.__pulsing = True
+
+    def pulse_off(self) -> None:
+        if not self.pulsing:
+            return None
+        proto = PinState.PULSE_OFF.value
+        self.__conn.write(proto)
+        self.__pulsing = False
