@@ -123,6 +123,17 @@ void checkPinState(StateTransitionPin *sspin) {
   }
 }
 
+struct PulseSettings {
+  int frequency;
+  int duration;
+  float interval;
+};
+
+PulseSettings pulse_settings[50];
+
+float calculate_pulse_interval(int frequency, int duration) {
+  return (1000 - frequency * duration) / frequency;
+}
 
 Servo servos[14];
 StateTransitionPin sspin = initSSPin();
@@ -180,6 +191,17 @@ void loop() {
         break;
       }
 
+      case '\x06': {
+        int freq, duration;
+        while ((freq = Serial.read()) == -1) {};
+        while ((duration = Serial.read()) == -1) {};
+        float interval = calculate_pulse_interval(freq, duration);
+        PulseSettings pset = PulseSettings {
+          freq, duration, interval
+        };
+        pulse_settings[pin] = pset;
+      }
+
       // write: '\x10' - '\x19'
       case '\x10': {
         digiLOW[pin]();
@@ -207,6 +229,18 @@ void loop() {
         };
         servos[pin].write(angle);
         break;
+      }
+
+      case '\x14': {
+         int idx;
+         while( (idx = Serial.read()) == -1 ) {};
+         while( !(Serial.read() == '\x15') ) {
+           digiHIGH[pin]();
+           delay(pulse_settings[idx].duration);
+           digiLOW[pin]();
+           delay(pulse_settings[idx].interval);
+         };
+         break;
       }
 
       // read: '\x20' - '\x29'
