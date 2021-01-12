@@ -282,39 +282,37 @@ class Arduino(object):
         [self.servo_rotate(pin, angle) for pin, angle in zip(pins, angles)]
 
 
-class PulseMode(Arduino):
-    maxidx = 10
+class Optuino(Arduino):
+    maxidx = 50
 
     def __init__(self, comport: Comport):
         super().__init__(comport)
-        self.__idx = 0
+        self.__conn = comport.connection
         self.__frequency: List[int] = []
         self.__duration: List[int] = []
         self.__pulsing = False
 
     @property
-    def current_idx(self) -> int:
-        return self.__idx
-
-    @property
-    def print_pulse_params(self):
-        for (i, (freq,
-                 dur)) in enumerate(zip(self.__frequency, self.__duration)):
-            print(f"{i}: Frequency - {freq}  Duration - {dur}")
+    def pulse_settings(self) -> List[str]:
+        return [
+            f"{i}: Frequency - {freq}  Duration - {dur}"
+            for (i, (freq,
+                     dur)) in enumerate(zip(self.__frequency, self.__duration))
+        ]
 
     @property
     def pulsing(self) -> bool:
         return self.__pulsing
 
-    def set_pulse_params(self, freq: int, duration: int) -> None:
-        if self.__idx >= self.maxidx:
+    def set_pulse_params(self, setting_idx: int, freq: int,
+                         duration: int) -> None:
+        if setting_idx >= self.maxidx:
             IndexError(f"idx must be lower than {self.maxidx}")
         proto = PinMode.PULSE.value \
-            + as_bytes(self.current_idx) + as_bytes(freq) + as_bytes(duration)
+            + as_bytes(setting_idx) + as_bytes(freq) + as_bytes(duration)
         self.__conn.write(proto)
         self.__frequency.append(freq)
         self.__duration.append(duration)
-        self.__idx += 1
 
     # `pulse_on` blocks other arduino functions until `pulse_off` is called
     # python's processes are not blocked
@@ -330,3 +328,4 @@ class PulseMode(Arduino):
             return None
         proto = PinState.PULSE_OFF.value
         self.__conn.write(proto)
+        self.__pulsing = False
