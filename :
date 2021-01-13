@@ -14,7 +14,7 @@ class PinoCli(object):
         self.__parser.add_argument("--yamls",
                                    "-Y",
                                    help="About this argument",
-                                   nargs="*")
+                                   nargs="+")
         self.__parser.add_argument("--port",
                                    "-p",
                                    help="About this argument",
