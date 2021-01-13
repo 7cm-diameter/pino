@@ -301,6 +301,14 @@ class Optuino(Arduino):
         ]
 
     @property
+    def pulse_frequency(self) -> List[int]:
+        return self.__frequency
+
+    @property
+    def pulse_duration(self) -> List[int]:
+        return self.__duration
+
+    @property
     def pulsing(self) -> bool:
         return self.__pulsing
 
