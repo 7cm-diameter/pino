@@ -45,6 +45,10 @@ class PinoCli(object):
         yml = self.__args.yaml
         return Config(yml)
 
+    def get_configs(self) -> Config:
+        ymls = self.__args.yamls
+        return Config(ymls)
+
     def get_port(self) -> str:
         return self.__args.port
 
