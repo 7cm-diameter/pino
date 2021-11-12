@@ -19,8 +19,8 @@ class Comport(object):
                                           "Arduino", "arduino_debug.exe")
         else:
             self.__arduino = "arduino"
-        self.__port = ""
-        self.__timeout = None
+        self.__port: Optional[str] = None
+        self.__timeout: Optional[float] = None
         self.__baudrate = 115200
         self.__dotino = join(dirname(abspath(__file__)), "proto.ino")
         self.__warmup: Optional[float] = None
@@ -124,6 +124,8 @@ class Comport(object):
     def disconnect(self):
         """disconnect serial port"""
         try:
+            if self.__conn is None:
+                return None
             self.__conn.close()
         except SerialException:
             pass
@@ -135,6 +137,8 @@ class Comport(object):
 
     def deploy(self) -> 'Comport':
         """Write arduino program to connected board"""
+        if self.__port is None:
+            raise ValueError("Port is not specified.")
         check_output(self.__as_command(self.__arduino, self.__dotino,
                                        self.__port),
                      shell=True)
@@ -145,7 +149,7 @@ class Comport(object):
         return self.__conn
 
     @property
-    def port(self) -> str:
+    def port(self) -> Optional[str]:
         return self.__port
 
     @property
@@ -214,6 +218,8 @@ HIGH = PinState.HIGH
 
 class Arduino(object):
     def __init__(self, comport: Comport):
+        if comport.connection is None:
+            raise ValueError("comport does not connected to serial port.")
         self.__conn = comport.connection
 
     def set_pinmode(self, pin: int, mode: PinMode) -> None:
@@ -309,6 +315,8 @@ class Optuino(Arduino):
 
     def __init__(self, comport: Comport):
         super().__init__(comport)
+        if comport.connection is None:
+            raise ValueError("comport does not connected to serial port.")
         self.__conn = comport.connection
         self.__frequency: List[int] = []
         self.__duration: List[int] = []
