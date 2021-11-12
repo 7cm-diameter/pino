@@ -3,7 +3,7 @@ import sys
 from enum import Enum
 from subprocess import check_output
 from time import sleep
-from typing import Iterable, List, Optional
+from typing import Any, Iterable, List, Optional
 
 from serial import Serial, SerialException  # type: ignore
 
@@ -89,6 +89,28 @@ class Comport(object):
     def set_warmup(self, duration: float) -> 'Comport':
         self.__warmup = duration
         return self
+
+    def __set_param(self, k: str, v: Any) -> 'Comport':
+        if k == "arduino":
+            self.set_arduino(v)
+        elif k == "port":
+            self.set_port(v)
+        elif k == "baudrate":
+            self.set_baudrate(v)
+        elif k == "timeout":
+            self.set_timeout(v)
+        elif k == "dotino":
+            self.set_inofile(v)
+        elif k == "warmup":
+            self.set_warmup(v)
+        return self
+
+    @staticmethod
+    def derive(setting: Setting) -> 'Comport':
+        com = Comport()
+        for k, v in setting.items():
+            com.__set_param(k, v)
+        return com
 
     def connect(self) -> 'Comport':
         self.__conn = Serial(self.__port,
