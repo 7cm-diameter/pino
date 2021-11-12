@@ -541,6 +541,7 @@ class Arduino(object):
         [self.servo_rotate(pin, angle) for pin, angle in zip(pins, angles)]
 
 
+# TODO: Interfaces needs to be revised.
 class Optuino(Arduino):
     maxidx = 50
 
