@@ -11,6 +11,7 @@ from pino.config import ComportSetting, PinModeSetting
 
 
 class Comport(object):
+    """Interface for comport setting"""
     def __init__(self):
         from os.path import abspath, dirname, join
         if sys.platform == "win32":
@@ -33,6 +34,18 @@ class Comport(object):
         self.disconnect()
 
     def apply_settings(self, settings: ComportSetting) -> 'Comport':
+        """apply settings specified by a dict.
+
+        Parameters
+        ----------
+        settings: ComportSetting
+            settings is `ComportSetting` describing settings for the comport.
+
+        Returns
+        -------
+        self: Comport
+            Comport that is applied given settings.
+        """
         available_settings = [
             "arduino", "port", "baudrate", "timeout", "dotino", "warmup"
         ]
@@ -64,28 +77,100 @@ class Comport(object):
         return self
 
     def set_arduino(self, arduino: str) -> 'Comport':
+        """specify the path to the arduino binary.
+
+        Parameters
+        ----------
+        arduino: str
+            Path to the arduino binary.
+
+        Returns
+        -------
+        self: Comport
+            Comport that is applied a given setting.
+        """
         self.__arduino = arduino
         return self
 
     def set_port(self, port: str) -> 'Comport':
+        """specify the serial port used for communicating with arduino board
+
+        Parameters
+        ----------
+        port: str
+            Serial port (e.g. "/dev/ttyACM0").
+
+        Returns
+        -------
+        self: Comport
+            Comport that is applied a given setting.
+        """
         self.__port = port
         return self
 
     def set_baudrate(self, baudrate: int) -> 'Comport':
+        """specify the baudrate used for communicating with arduino board.
+
+        Parameters
+        ----------
+        baudrate: int
+            Data transfer rate (bps) for serial communication.
+
+        Returns
+        -------
+        self: Comport
+            Comport that is applied a given setting.
+        """
         if baudrate not in Serial.BAUDRATES:
             raise SerialException("Given baudrate cannot be used")
         self.__baudrate = baudrate
         return self
 
     def set_timeout(self, timeout: Optional[float]) -> 'Comport':
+        """specify the timeout when reading data from serial port
+
+        Parameters
+        ----------
+        timeout: float
+            Waiting time for reading data from serial port
+
+        Returns
+        -------
+        self: Comport
+            Comport that is applied a given setting.
+        """
         self.__timeout = timeout
         return self
 
     def set_inofile(self, path: str) -> 'Comport':
+        """specify the arduino sketch writing into an arduino board
+
+        Parameters
+        ----------
+        path: str
+            Path to the arduino sketch.
+
+        Returns
+        -------
+        self: Comport
+            Comport that is applied a given setting.
+        """
         self.__dotino = path
         return self
 
     def set_warmup(self, duration: float) -> 'Comport':
+        """specify waiting time after writing the arduino sketch into a board.
+
+        Parameters
+        ----------
+        duration: float
+            waiting time after writing arduino sketch into a board.
+
+        Returns
+        -------
+        self: Comport
+            Comport that is applied a given setting.
+        """
         self.__warmup = duration
         return self
 
@@ -106,12 +191,25 @@ class Comport(object):
 
     @staticmethod
     def derive(setting: ComportSetting) -> 'Comport':
+        """read settings from `ComportSetting` and instatiate the comport.
+
+        Parameters
+        ----------
+        setting: ComportSetting
+            settings is `ComportSetting` describing settings for the comport.
+
+        Returns
+        -------
+        self: Comport
+            Comport that is applied given settings.
+        """
         com = Comport()
         for k, v in setting.items():
             com.__set_param(k, v)
         return com
 
     def connect(self) -> 'Comport':
+        """connect to the serial port"""
         self.__conn = Serial(self.__port,
                              self.__baudrate,
                              timeout=self.__timeout)
@@ -135,7 +233,7 @@ class Comport(object):
         return f"{binary} --upload {upload}, --port {port}"
 
     def deploy(self) -> 'Comport':
-        """Write arduino program to connected board"""
+        """Write the arduino sketch to connected board"""
         if self.__port is None:
             raise ValueError("Port is not specified.")
         check_output(self.__as_command(self.__arduino, self.__dotino,
@@ -173,6 +271,7 @@ class Comport(object):
 
     @staticmethod
     def available_ports() -> None:
+        """Show the list of available ports"""
         from serial.tools.list_ports import comports
         devs = comports()
         if len(devs) == 0:
@@ -183,10 +282,22 @@ class Comport(object):
 
 
 def as_bytes(x: int) -> bytes:
+    """ cast int into bytes
+
+    Parameters
+    ----------
+    x: int
+        an integer to be cast into bytes
+
+    Returns
+    -------
+    b: bytes
+    """
     return x.to_bytes(1, "little")
 
 
 class PinMode(Enum):
+    """pin mode used as an argument for `Arduino.pin_mode`"""
     INPUT = b'\x00'
     INPUT_PULLUP = b'\x01'
     OUTPUT = b'\x02'
@@ -205,6 +316,7 @@ SERVO = PinMode.SERVO
 
 
 class PinState(Enum):
+    """pin state used as an argument for `Arduino.digital_write`"""
     LOW = b'\x10'
     HIGH = b'\x11'
     PULSE_ON = b'\x14'
@@ -216,16 +328,41 @@ HIGH = PinState.HIGH
 
 
 class Arduino(object):
+    """Interface for operating arduino board"""
     def __init__(self, comport: Comport):
+        """Instantiate Arduino class.
+
+        Parameters
+        ----------
+        comport: Comport
+            Comport used for communicating with arduino board.
+        """
         if comport.connection is None:
             raise ValueError("comport does not connected to serial port.")
         self.__conn = comport.connection
 
     def set_pinmode(self, pin: int, mode: PinMode) -> None:
+        """Set the mode of a pin.
+
+        Parameters
+        ----------
+        pin: int
+            Pin number
+
+        mode: PinMode
+            Mode to apply to the pin.
+        """
         proto = mode.value + as_bytes(pin)
         self.__conn.write(proto)
 
     def apply_pinmode_settings(self, settings: PinModeSetting) -> None:
+        """Apply pin mode settings specifed by a given dict.
+
+        Parameters
+        ----------
+        settings: PinModeSetting
+            A dict describing pin mode settings.
+        """
         for pin in settings:
             mode_str = settings[pin]
             if mode_str == "INPUT":
@@ -247,38 +384,113 @@ class Arduino(object):
             self.set_pinmode(pin, mode)
 
     def digital_write(self, pin: int, state: PinState) -> None:
+        """Set HIGH or LOW to the specified pin.
+
+        Parameters
+        ----------
+        pin: int
+            Pin number.
+        state: PinState
+            HIGH or LOW. HIGH = 5v (or 3.3V) / LOW = 0V.
+        """
         proto = state.value + as_bytes(pin)
         self.__conn.write(proto)
 
     def multiple_digital_write(self, pins: Iterable[int],
                                states: Iterable[PinState]) -> None:
+        """set HIGH or LOW to the multiple pins.
+
+        Parameters
+        ----------
+        pins: Iterable[int]
+            pin numbers
+        states: Iterable[PinState]
+            List of HIGH or LOW.
+        """
         [self.digital_write(pin, state) for pin, state in zip(pins, states)]
 
     def digital_read(self,
                      pin: int,
                      size: int = 0,
                      timeout: Optional[float] = None) -> bytes:
+        """Read the state of specified pin.
+
+        Parameters
+        ----------
+        pin: int
+            pin number
+        size: int = 0
+            data size to read (byte).
+        timeout: Optional[float] = None
+            waiting time to read.
+
+        Returns
+        -------
+        value: bytes
+            Read value which denotes pin state.
+        """
         proto = b'\x10' + as_bytes(pin)
         self.__conn.write(proto)
         return self.__conn.read(size)
 
     def analog_write(self, pin: int, v: int) -> None:
+        """Output PWM wave from specified pin.
+
+        Parameters
+        ----------
+        pin: int
+            pin number
+        v: int
+            Output voltage. `v` must be in bound from 0 - 255.
+        """
         proto = b'\x12' + as_bytes(pin) + as_bytes(v)
         self.__conn.write(proto)
 
     def multiple_analog_write(self, pins: Iterable[int],
                               vs: Iterable[int]) -> None:
+        """Output PWM wave from multiple pins.
+
+        Parameters
+        ----------
+        pins: Iterable[int]
+            pin numbers
+        vs: int
+            List of output voltage. `v` must be in bound from 0 - 255.
+        """
         [self.analog_write(pin, v) for pin, v in zip(pins, vs)]
 
     def analog_read(self,
                     pin: int,
                     size: int = 0,
                     timeout: Optional[float] = None) -> bytes:
+        """Read a value from specified analog pin.
+
+        Parameters
+        ----------
+        pin: int
+            pin number
+        size: int = 0
+            data size to read (byte).
+        timeout: Optional[float] = None
+            waiting time to read.
+
+        Returns
+        -------
+        value: bytes
+            Read value (ranged from 0 to 1023).
+        """
         proto = b'\x21' + as_bytes(pin)
         self.__conn.write(proto)
         return self.__conn.read(size)
 
     def read_until_eol(self) -> Optional[bytes]:
+        """Read until end of line from serial port.
+
+        Returns
+        -------
+        line: Optional[bytes]
+            Read value as bytes or None if the readignis cancelled.
+        """
         line: bytes = self.__conn.readline()
         if line == b'':
             return None
@@ -292,23 +504,44 @@ class Arduino(object):
         return line
 
     def cancel_read(self) -> None:
+        """Cancel reading."""
         self.__conn.cancel_read()
         return None
 
     def disconnect(self):
+        """Disconnect from arduino board."""
         self.__conn.reset_input_buffer()
         self.__conn.reset_output_buffer()
         self.__conn.close()
 
     def servo_rotate(self, pin: int, angle: int) -> None:
+        """Rotate the servomotor to the specifed angle.
+
+        Parameters
+        ----------
+        pin: int
+            Pin number.
+        angle: int
+            Angle to rotate.
+        """
         proto = b'\x13' + as_bytes(pin) + as_bytes(angle)
         self.__conn.write(proto)
 
     def mulitiple_servo_rotate(self, pins: Iterable[int],
                                angles: Iterable[int]) -> None:
+        """Rotate the multiple servomotor to the specifed angle.
+
+        Parameters
+        ----------
+        pin: Iterable[int]
+            Pin numbers.
+        angle: Iterable[int]
+            Angles to rotate.
+        """
         [self.servo_rotate(pin, angle) for pin, angle in zip(pins, angles)]
 
 
+# TODO: Interfaces needs to be revised.
 class Optuino(Arduino):
     maxidx = 50
 

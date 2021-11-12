@@ -9,11 +9,19 @@ MetadataSetting = Setting
 
 
 class ComportSetting(Dict[str, Any]):
+    """Interface to configure `Comport` by yaml file"""
     available_attr = [
         "arduino", "port", "baudrate", "timeout", "dotino", "warmup"
     ]
 
     def __init__(self, setting: Optional[List[Tuple[str, Any]]] = None):
+        """Instantiate ComportSetting
+
+        Parameters
+        ----------
+        setting: Optional[List[Tuple[str, Any]]] = None
+            List of pair of attribute names and values.
+        """
         from os.path import abspath, dirname, join
         super().__init__()
         self["arduino"] = "arduino"
@@ -49,12 +57,20 @@ class ComportSetting(Dict[str, Any]):
 
 
 class PinModeSetting(Dict[int, str]):
+    """Interface to configure pin mode by yaml file"""
     available_modes = [
         "INPUT", "INPUT_PULLUP", "OUTPUT", "SERVO", "SSINPUT",
         "SSINPUT_PULLUP", "PULSE"
     ]
 
     def __init__(self, setting: Optional[List[Tuple[int, str]]] = None):
+        """Instantiate PinModeSetting
+
+        Parameters
+        ----------
+        setting: Optional[List[Tuple[str, Any]]] = None
+            List of pair of attribute names and values.
+        """
         super().__init__()
         if setting is None:
             return None
@@ -70,7 +86,15 @@ class PinModeSetting(Dict[int, str]):
 
 
 class Config(dict):
+    """Read the yaml file and generate `ComportSetting` and `PinModeSetting`"""
     def __init__(self, path: str) -> None:
+        """Instantiate Config
+
+        Parameters
+        ----------
+        path: str
+            Path to a yaml file.
+        """
         f = open(path, "r")
         self.__path = path
         d: dict = yaml.safe_load(f)
@@ -82,6 +106,13 @@ class Config(dict):
 
     @property
     def comport(self) -> ComportSetting:
+        """Return `ComportSetting` generated based on the yaml file
+
+        Returns
+        -------
+        comport: ComportSetting
+            Instance of `ComportSetting` generated based on the yaml file
+        """
         cms = ComportSetting()
         for k, v in self["Comport"].items():
             cms[k] = v
@@ -100,6 +131,13 @@ class Config(dict):
     #     return self["PinMode"]
     @property
     def pinmode(self) -> PinModeSetting:
+        """Return `PinModeSetting` generated based on the yaml file
+
+        Returns
+        -------
+        pinmode: PinModeSetting
+            Instance of `PinModeSetting` generated based on the yaml file
+        """
         pms = PinModeSetting()
         for k, v in self["PinMode"].items():
             pms[k] = v
