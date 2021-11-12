@@ -1,0 +1,9 @@
+Comport:
+  arduino:  "arduino"
+  port:     "/dev/ttyACM0" # `linux`: `/dev/ttyACMx` / `windows`: `COMx` (x: int)
+  baudrate: 115200         # available baudrates are 300, 1200, 2400, 9600, 14400, 19200, 38400, 57600, 115200
+  timeout:  1.
+  warmup:   2.0            # sec (should not be changed.)
+
+PinMode:
+  13:       "OUTPUT"
