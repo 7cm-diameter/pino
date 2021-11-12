@@ -11,6 +11,7 @@ from pino.config import ComportSetting, PinModeSetting
 
 
 class Comport(object):
+    """Interface for comport setting"""
     def __init__(self):
         from os.path import abspath, dirname, join
         if sys.platform == "win32":
@@ -33,6 +34,18 @@ class Comport(object):
         self.disconnect()
 
     def apply_settings(self, settings: ComportSetting) -> 'Comport':
+        """apply settings specified by a dict.
+
+        Parameters
+        ----------
+        settings: ComportSetting
+            settings is `ComportSetting` describing settings for the comport.
+
+        Returns
+        -------
+        self: Comport
+            Comport that is applied given settings.
+        """
         available_settings = [
             "arduino", "port", "baudrate", "timeout", "dotino", "warmup"
         ]
@@ -64,28 +77,100 @@ class Comport(object):
         return self
 
     def set_arduino(self, arduino: str) -> 'Comport':
+        """specify the path to the arduino binary.
+
+        Parameters
+        ----------
+        arduino: str
+            Path to the arduino binary.
+
+        Returns
+        -------
+        self: Comport
+            Comport that is applied a given setting.
+        """
         self.__arduino = arduino
         return self
 
     def set_port(self, port: str) -> 'Comport':
+        """specify the serial port used for communicating with arduino board
+
+        Parameters
+        ----------
+        port: str
+            Serial port (e.g. "/dev/ttyACM0").
+
+        Returns
+        -------
+        self: Comport
+            Comport that is applied a given setting.
+        """
         self.__port = port
         return self
 
     def set_baudrate(self, baudrate: int) -> 'Comport':
+        """specify the baudrate used for communicating with arduino board.
+
+        Parameters
+        ----------
+        baudrate: int
+            Data transfer rate (bps) for serial communication.
+
+        Returns
+        -------
+        self: Comport
+            Comport that is applied a given setting.
+        """
         if baudrate not in Serial.BAUDRATES:
             raise SerialException("Given baudrate cannot be used")
         self.__baudrate = baudrate
         return self
 
     def set_timeout(self, timeout: Optional[float]) -> 'Comport':
+        """specify the timeout when reading data from serial port
+
+        Parameters
+        ----------
+        timeout: float
+            Waiting time for reading data from serial port
+
+        Returns
+        -------
+        self: Comport
+            Comport that is applied a given setting.
+        """
         self.__timeout = timeout
         return self
 
     def set_inofile(self, path: str) -> 'Comport':
+        """specify the arduino sketch writing into an arduino board
+
+        Parameters
+        ----------
+        path: str
+            Path to the arduino sketch.
+
+        Returns
+        -------
+        self: Comport
+            Comport that is applied a given setting.
+        """
         self.__dotino = path
         return self
 
     def set_warmup(self, duration: float) -> 'Comport':
+        """specify waiting time after writing the arduino sketch into a board.
+
+        Parameters
+        ----------
+        duration: float
+            waiting time after writing arduino sketch into a board.
+
+        Returns
+        -------
+        self: Comport
+            Comport that is applied a given setting.
+        """
         self.__warmup = duration
         return self
 
@@ -106,12 +191,25 @@ class Comport(object):
 
     @staticmethod
     def derive(setting: ComportSetting) -> 'Comport':
+        """read settings from `ComportSetting` and instatiate the comport.
+
+        Parameters
+        ----------
+        setting: ComportSetting
+            settings is `ComportSetting` describing settings for the comport.
+
+        Returns
+        -------
+        self: Comport
+            Comport that is applied given settings.
+        """
         com = Comport()
         for k, v in setting.items():
             com.__set_param(k, v)
         return com
 
     def connect(self) -> 'Comport':
+        """connect to the serial port"""
         self.__conn = Serial(self.__port,
                              self.__baudrate,
                              timeout=self.__timeout)
@@ -135,7 +233,7 @@ class Comport(object):
         return f"{binary} --upload {upload}, --port {port}"
 
     def deploy(self) -> 'Comport':
-        """Write arduino program to connected board"""
+        """Write the arduino sketch to connected board"""
         if self.__port is None:
             raise ValueError("Port is not specified.")
         check_output(self.__as_command(self.__arduino, self.__dotino,
@@ -173,6 +271,7 @@ class Comport(object):
 
     @staticmethod
     def available_ports() -> None:
+        """Show the list of available ports"""
         from serial.tools.list_ports import comports
         devs = comports()
         if len(devs) == 0:
