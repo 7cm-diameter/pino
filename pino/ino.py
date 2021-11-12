@@ -22,7 +22,7 @@ class Comport(object):
         self.__port: Optional[str] = None
         self.__timeout: Optional[float] = None
         self.__baudrate = 115200
-        self.__dotino = join(dirname(abspath(__file__)), "proto.ino")
+        self.__sketch = join(dirname(abspath(__file__)), "proto.ino")
         self.__warmup: Optional[float] = None
         self.__conn = None
 
@@ -69,10 +69,10 @@ class Comport(object):
                 val = settings.get(k)
                 if val is not None:
                     self.set_timeout(val)
-            if k == "dotino":
+            if k == "sketch":
                 val = settings.get(k)
                 if val is not None:
-                    self.set_inofile(val)
+                    self.set_sketch(val)
             if k == "warmup":
                 val = settings.get(k)
                 if val is not None:
@@ -145,7 +145,7 @@ class Comport(object):
         self.__timeout = timeout
         return self
 
-    def set_inofile(self, path: str) -> 'Comport':
+    def set_sketch(self, path: str) -> 'Comport':
         """specify the arduino sketch writing into an arduino board
 
         Parameters
@@ -158,7 +158,7 @@ class Comport(object):
         self: Comport
             Comport that is applied a given setting.
         """
-        self.__dotino = path
+        self.__sketch = path
         return self
 
     def set_warmup(self, duration: float) -> 'Comport':
@@ -186,8 +186,8 @@ class Comport(object):
             self.set_baudrate(v)
         elif k == "timeout":
             self.set_timeout(v)
-        elif k == "dotino":
-            self.set_inofile(v)
+        elif k == "sketch":
+            self.set_sketch(v)
         elif k == "warmup":
             self.set_warmup(v)
         return self
@@ -239,7 +239,7 @@ class Comport(object):
         """Write the arduino sketch to connected board"""
         if self.__port is None:
             raise ValueError("Port is not specified.")
-        check_output(self.__as_command(self.__arduino, self.__dotino,
+        check_output(self.__as_command(self.__arduino, self.__sketch,
                                        self.__port),
                      shell=True)
         return self
@@ -257,15 +257,15 @@ class Comport(object):
         return self.__baudrate
 
     @property
-    def inofile(self) -> str:
-        return self.__dotino
+    def sketch(self) -> str:
+        return self.__sketch
 
     @property
     def warmup(self) -> Optional[float]:
         return self.__warmup
 
     @property
-    def inobin(self) -> str:
+    def arduino(self) -> str:
         return self.__arduino
 
     @property

@@ -11,7 +11,7 @@ MetadataSetting = Setting
 class ComportSetting(Dict[str, Any]):
     """Interface to configure `Comport` by yaml file"""
     available_attr = [
-        "arduino", "port", "baudrate", "timeout", "dotino", "warmup"
+        "arduino", "port", "baudrate", "timeout", "sketch", "warmup"
     ]
 
     def __init__(self, setting: Optional[List[Tuple[str, Any]]] = None):
@@ -26,7 +26,7 @@ class ComportSetting(Dict[str, Any]):
         super().__init__()
         self["arduino"] = "arduino"
         self["baudrate"] = 115200
-        self["dotino"] = join(dirname(abspath(__file__)), "proto.ino")
+        self["sketch"] = join(dirname(abspath(__file__)), "proto.ino")
         if setting is None:
             return None
         for k, v in setting:
@@ -47,7 +47,7 @@ class ComportSetting(Dict[str, Any]):
         elif key == "timeout":
             if not isinstance(value, float):
                 raise ValueError("`timeout` must be float")
-        elif key == "dotino":
+        elif key == "sketch":
             if not isinstance(value, str):
                 raise ValueError("`dotino` must be str")
         elif key == "warmup":
