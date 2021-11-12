@@ -4,10 +4,10 @@ import yaml
 
 Setting = Dict[str, Any]
 # Alias for settings
-Comport = Setting
-Experimental = Setting
-Metadata = Setting
-PinMode = Dict[int, str]
+ComportSetting = Setting
+ExperimentalSetting = Setting
+MetadataSetting = Setting
+PinModeSetting = Dict[int, str]
 
 
 class Config(dict):
@@ -22,17 +22,17 @@ class Config(dict):
         return dict()
 
     @property
-    def comport(self) -> Comport:
+    def comport(self) -> ComportSetting:
         return self["Comport"]
 
     @property
-    def experimental(self) -> Experimental:
+    def experimental(self) -> ExperimentalSetting:
         return self["Experimental"]
 
     @property
-    def metadata(self) -> Metadata:
+    def metadata(self) -> MetadataSetting:
         return self["Metadata"]
 
     @property
-    def pinmode(self) -> PinMode:
+    def pinmode(self) -> PinModeSetting:
         return self["PinMode"]

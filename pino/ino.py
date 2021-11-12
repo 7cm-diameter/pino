@@ -7,8 +7,7 @@ from typing import Any, Iterable, List, Optional
 
 from serial import Serial, SerialException  # type: ignore
 
-from pino.config import PinMode as _PinMode
-from pino.config import Setting
+from pino.config import ComportSetting, PinModeSetting
 
 
 class Comport(object):
@@ -33,7 +32,7 @@ class Comport(object):
         self.__conn.reset_output_buffer()
         self.disconnect()
 
-    def apply_settings(self, settings: Setting) -> 'Comport':
+    def apply_settings(self, settings: ComportSetting) -> 'Comport':
         available_settings = [
             "arduino", "port", "baudrate", "timeout", "dotino", "warmup"
         ]
@@ -106,7 +105,7 @@ class Comport(object):
         return self
 
     @staticmethod
-    def derive(setting: Setting) -> 'Comport':
+    def derive(setting: ComportSetting) -> 'Comport':
         com = Comport()
         for k, v in setting.items():
             com.__set_param(k, v)
@@ -226,7 +225,7 @@ class Arduino(object):
         proto = mode.value + as_bytes(pin)
         self.__conn.write(proto)
 
-    def apply_pinmode_settings(self, settings: _PinMode) -> None:
+    def apply_pinmode_settings(self, settings: PinModeSetting) -> None:
         for pin in settings:
             mode_str = settings[pin]
             if mode_str == "INPUT":
