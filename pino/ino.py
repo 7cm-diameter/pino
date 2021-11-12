@@ -36,6 +36,9 @@ class Comport(object):
     def apply_settings(self, settings: ComportSetting) -> 'Comport':
         """apply settings specified by a dict.
 
+        Deprecated. Use `derive` instead of this.
+        This will be removed in the future.
+
         Parameters
         ----------
         settings: ComportSetting
