@@ -1,13 +1,72 @@
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 
 Setting = Dict[str, Any]
 # Alias for settings
-ComportSetting = Setting
 ExperimentalSetting = Setting
 MetadataSetting = Setting
-PinModeSetting = Dict[int, str]
+
+
+class ComportSetting(Dict[str, Any]):
+    available_attr = [
+        "arduino", "port", "baudrate", "timeout", "dotino", "warmup"
+    ]
+
+    def __init__(self, setting: Optional[List[Tuple[str, Any]]] = None):
+        from os.path import abspath, dirname, join
+        super().__init__()
+        self["arduino"] = "arduino"
+        self["baudrate"] = 115200
+        self["dotino"] = join(dirname(abspath(__file__)), "proto.ino")
+        if setting is None:
+            return None
+        for k, v in setting:
+            self[k] = v
+
+    def __setitem__(self, key: str, value: Any):
+        if key not in self.available_attr:
+            raise ValueError(f"{key} is not allowed as comport setting.")
+        if key == "arduino":
+            if not isinstance(value, str):
+                raise ValueError("`arduino` must be str")
+        elif key == "port":
+            if not isinstance(value, str):
+                raise ValueError("`port` must be str")
+        elif key == "baudrate":
+            if not isinstance(value, int):
+                raise ValueError("`baudrate` must be int")
+        elif key == "timeout":
+            if not isinstance(value, float):
+                raise ValueError("`timeout` must be float")
+        elif key == "dotino":
+            if not isinstance(value, str):
+                raise ValueError("`dotino` must be str")
+        elif key == "warmup":
+            if not isinstance(value, float):
+                raise ValueError("`warmup` must be float")
+        super().__setitem__(key, value)
+
+
+class PinModeSetting(Dict[int, str]):
+    available_modes = [
+        "INPUT", "INPUT_PULLUP", "OUTPUT", "SERVO", "SSINPUT",
+        "SSINPUT_PULLUP", "PULSE"
+    ]
+
+    def __init__(self, setting: Optional[List[Tuple[int, str]]] = None):
+        super().__init__()
+        if setting is None:
+            return None
+        for k, v in setting:
+            self[k] = v
+
+    def __setitem__(self, key: int, value: str):
+        if not isinstance(key, int):
+            raise ValueError("key must be int.")
+        if value not in self.available_modes:
+            raise ValueError(f"{value} is not allowed as pin mode.")
+        super().__setitem__(key, value)
 
 
 class Config(dict):
@@ -23,7 +82,10 @@ class Config(dict):
 
     @property
     def comport(self) -> ComportSetting:
-        return self["Comport"]
+        cms = ComportSetting()
+        for k, v in self["Comport"].items():
+            cms[k] = v
+        return cms
 
     @property
     def experimental(self) -> ExperimentalSetting:
@@ -33,6 +95,12 @@ class Config(dict):
     def metadata(self) -> MetadataSetting:
         return self["Metadata"]
 
+    # @property
+    # def pinmode(self) -> PinModeSetting:
+    #     return self["PinMode"]
     @property
     def pinmode(self) -> PinModeSetting:
-        return self["PinMode"]
+        pms = PinModeSetting()
+        for k, v in self["PinMode"].items():
+            pms[k] = v
+        return pms
