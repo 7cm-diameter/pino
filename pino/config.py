@@ -2,11 +2,11 @@ from typing import Any, Dict
 
 import yaml
 
-Settings = Dict[str, Any]
+Setting = Dict[str, Any]
 # Alias for settings
-Comport = Settings
-Experimental = Settings
-Metadata = Settings
+Comport = Setting
+Experimental = Setting
+Metadata = Setting
 PinMode = Dict[int, str]
 
 
@@ -18,7 +18,7 @@ class Config(dict):
         [self.__setitem__(item[0], item[1]) for item in d.items()]
         f.close()
 
-    def __missing__(self) -> Settings:
+    def __missing__(self) -> Setting:
         return dict()
 
     @property
