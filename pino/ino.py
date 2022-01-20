@@ -414,7 +414,7 @@ class Arduino(object):
 
     def digital_read(self,
                      pin: int,
-                     size: int = 0,
+                     size: int = 1,
                      timeout: Optional[float] = None) -> bytes:
         """Read the state of specified pin.
 
@@ -432,7 +432,7 @@ class Arduino(object):
         value: bytes
             Read value which denotes pin state.
         """
-        proto = b'\x10' + as_bytes(pin)
+        proto = b'\x20' + as_bytes(pin)
         self.__conn.write(proto)
         return self.__conn.read(size)
 
