@@ -415,7 +415,7 @@ class Arduino(object):
     def digital_read(self,
                      pin: int,
                      size: int = 1,
-                     timeout: Optional[float] = None) -> bytes:
+                     timeout: Optional[float] = None) -> PinState:
         """Read the state of specified pin.
 
         Parameters
@@ -434,7 +434,9 @@ class Arduino(object):
         """
         proto = b'\x20' + as_bytes(pin)
         self.__conn.write(proto)
-        return self.__conn.read(size)
+        if self.__conn.read(size) == b'\x00':
+            return LOW
+        return HIGH
 
     def analog_write(self, pin: int, v: int) -> None:
         """Output PWM wave from specified pin.
