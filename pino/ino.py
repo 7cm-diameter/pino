@@ -18,11 +18,11 @@ class Comport(object):
             self.__arduino = os.path.join(os.environ["ProgramFiles(x86)"],
                                           "Arduino", "arduino_debug.exe")
         else:
-            self.__arduino = "arduino"
+            self.__arduino = "arduino-cli"
         self.__port: Optional[str] = None
         self.__timeout: Optional[float] = None
         self.__baudrate = 115200
-        self.__sketch = join(dirname(abspath(__file__)), "proto.ino")
+        self.__sketch = join(dirname(abspath(__file__)), "proto")
         self.__warmup: Optional[float] = None
         self.__conn = None
 
@@ -233,7 +233,7 @@ class Comport(object):
 
     @staticmethod
     def __as_command(binary: str, upload: str, port: str) -> str:
-        return f"{binary} --upload {upload}, --port {port}"
+        return f"{binary} compile -b arduino:avr:uno {upload} -u -p {port}"
 
     def deploy(self) -> 'Comport':
         """Write the arduino sketch to connected board"""
