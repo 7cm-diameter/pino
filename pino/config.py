@@ -24,9 +24,9 @@ class ComportSetting(Dict[str, Any]):
         """
         from os.path import abspath, dirname, join
         super().__init__()
-        self["arduino"] = "arduino"
+        self["arduino"] = "arduino-cli"
         self["baudrate"] = 115200
-        self["sketch"] = join(dirname(abspath(__file__)), "proto.ino")
+        self["sketch"] = join(dirname(abspath(__file__)), "proto")
         if setting is None:
             return None
         for k, v in setting:
